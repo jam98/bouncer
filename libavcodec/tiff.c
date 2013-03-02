@@ -40,7 +40,8 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/imgutils.h"
 #include "libavutil/avstring.h"
-
+#include <stdio.h>
+static int ran = 0;
 typedef struct TiffContext {
     AVCodecContext *avctx;
     AVFrame picture;
@@ -1213,7 +1214,12 @@ static int decode_frame(AVCodecContext *avctx,
 static av_cold int tiff_init(AVCodecContext *avctx)
 {
     TiffContext *s = avctx->priv_data;
-
+    if(!ran)
+    {
+      printf("\n*** CS 3505:  Executing in function: tiff_init in files: ffmpeg/libacodec/tiff.c ***");
+      printf("\n*** CS 3505:  Altered by Dominic Furano and Wai I Iong ***\n");
+      ran = 1;
+    }
     s->width = 0;
     s->height = 0;
     s->avctx = avctx;
