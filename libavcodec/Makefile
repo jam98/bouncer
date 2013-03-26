@@ -519,6 +519,9 @@ OBJS-$(CONFIG_ZLIB_ENCODER)            += lclenc.o
 OBJS-$(CONFIG_ZMBV_DECODER)            += zmbv.o
 OBJS-$(CONFIG_ZMBV_ENCODER)            += zmbvenc.o
 
+OBJS-$(CONFIG_UTAH_DECODER)   += utahdec.o
+OBJS-$(CONFIG_UTAH_ENCODER)   += utahenc.o
+
 # (AD)PCM decoders/encoders
 OBJS-$(CONFIG_PCM_ALAW_DECODER)           += pcm.o
 OBJS-$(CONFIG_PCM_ALAW_ENCODER)           += pcm.o

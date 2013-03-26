@@ -303,6 +303,7 @@ void avcodec_register_all(void)
     REGISTER_DECODER(ZEROCODEC,         zerocodec);
     REGISTER_ENCDEC (ZLIB,              zlib);
     REGISTER_ENCDEC (ZMBV,              zmbv);
+    REGISTER_ENCDEC (UTAH,              utah);
 
     /* audio codecs */
     REGISTER_ENCDEC (AAC,               aac);

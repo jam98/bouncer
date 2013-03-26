@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "FFMPEG-FORMATS 1"
-.TH FFMPEG-FORMATS 1 "2013-02-20" " " " "
+.TH FFMPEG-FORMATS 1 "2013-03-08" " " " "
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -341,6 +341,8 @@ following directive is recognized:
 .IX Item "file path"
 Path to a file to read; special characters and spaces must be escaped with
 backslash or single quotes.
+.Sp
+All subsequent directives apply to that file.
 .ie n .IP "\fB\fB""ffconcat version 1.0""\fB\fR" 4
 .el .IP "\fB\f(CBffconcat version 1.0\fB\fR" 4
 .IX Item "ffconcat version 1.0"
@@ -350,6 +352,12 @@ to 1 if it was to its default \-1.
 To make FFmpeg recognize the format automatically, this directive must
 appears exactly as is (no extra space or byte-order-mark) on the very first
 line of the script.
+.ie n .IP "\fB\fB""duration \f(BIdur\f(CB""\fB\fR" 4
+.el .IP "\fB\f(CBduration \f(CBdur\f(CB\fB\fR" 4
+.IX Item "duration dur"
+Duration of the file. This information can be specified from the file;
+specifying it here may be more efficient or help if the information from the
+file is not available or accurate.
 .PP
 \fIOptions\fR
 .IX Subsection "Options"
@@ -1351,13 +1359,13 @@ to feed the same packets to several muxers directly.
 The slave outputs are specified in the file name given to the muxer,
 separated by '|'. If any of the slave name contains the '|' separator,
 leading or trailing spaces or any special character, it must be
-quoting_and_escaping, escaped.
+escaped (see the ``Quoting and escaping'' section in the ffmpeg-utils
+manual).
 .PP
 Options can be specified for each slave by prepending them as a list of
 \&\fIkey\fR=\fIvalue\fR pairs separated by ':', between square brackets. If
 the options values contain a special character or the ':' separator, they
-must be quoting_and_escaping, escaped; note that this is a second
-level escaping.
+must be escaped; note that this is a second level escaping.
 .PP
 Example: encode something and both archive it in a WebM file and stream it
 as MPEG-TS over \s-1UDP:\s0

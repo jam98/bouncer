@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "FFMPEG 1"
-.TH FFMPEG 1 "2013-02-20" " " " "
+.TH FFMPEG 1 "2013-03-08" " " " "
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -593,6 +593,14 @@ libx264, and the 138th audio, which will be encoded with libvorbis.
 .IX Item "-t duration (output)"
 Stop writing the output after its duration reaches \fIduration\fR.
 \&\fIduration\fR may be a number in seconds, or in \f(CW\*(C`hh:mm:ss[.xxx]\*(C'\fR form.
+.Sp
+\&\-to and \-t are mutually exclusive and \-t has priority.
+.IP "\fB\-to\fR \fIposition\fR \fB(\fR\fIoutput\fR\fB)\fR" 4
+.IX Item "-to position (output)"
+Stop writing the output at \fIposition\fR.
+\&\fIposition\fR may be a number in seconds, or in \f(CW\*(C`hh:mm:ss[.xxx]\*(C'\fR form.
+.Sp
+\&\-to and \-t are mutually exclusive and \-t has priority.
 .IP "\fB\-fs\fR \fIlimit_size\fR \fB(\fR\fIoutput\fR\fB)\fR" 4
 .IX Item "-fs limit_size (output)"
 Set the file size limit, expressed in bytes.
@@ -750,13 +758,13 @@ will be used.
 E.g. to extract the first attachment to a file named 'out.ttf':
 .Sp
 .Vb 1
-\&        ffmpeg \-dump_attachment:t:0 out.ttf INPUT
+\&        ffmpeg \-dump_attachment:t:0 out.ttf \-i INPUT
 .Ve
 .Sp
 To extract all attachments to files determined by the \f(CW\*(C`filename\*(C'\fR tag:
 .Sp
 .Vb 1
-\&        ffmpeg \-dump_attachment:t "" INPUT
+\&        ffmpeg \-dump_attachment:t "" \-i INPUT
 .Ve
 .Sp
 Technical note \*(-- attachments are implemented as codec extradata, so this

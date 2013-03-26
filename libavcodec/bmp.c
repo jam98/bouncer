@@ -24,6 +24,7 @@
 #include "bmp.h"
 #include "internal.h"
 #include "msrledec.h"
+#include <stdio.h>
 
 static av_cold int bmp_decode_init(AVCodecContext *avctx)
 {
@@ -38,7 +39,7 @@ static av_cold int bmp_decode_init(AVCodecContext *avctx)
 static int bmp_decode_frame(AVCodecContext *avctx,
                             void *data, int *got_frame,
                             AVPacket *avpkt)
-{
+{    
     const uint8_t *buf = avpkt->data;
     int buf_size       = avpkt->size;
     BMPContext *s      = avctx->priv_data;
@@ -50,7 +51,7 @@ static int bmp_decode_frame(AVCodecContext *avctx,
     BiCompression comp;
     unsigned int ihsize;
     int i, j, n, linesize, ret;
-    uint32_t rgb[3];
+    uint32_t rgb[3] = {0};
     uint32_t alpha = 0;
     uint8_t *ptr;
     int dsize;

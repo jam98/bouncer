@@ -1551,7 +1551,7 @@ static int decode_update_thread_context(AVCodecContext *dst,
         memcpy(h, h1, offsetof(H264Context, intra_pcm_ptr));
         memcpy(&h->cabac, &h1->cabac,
                sizeof(H264Context) - offsetof(H264Context, cabac));
-        av_assert0(&h->cabac == &h->mb_padding + 1);
+        av_assert0((void*)&h->cabac == &h->mb_padding + 1);
 
         memset(h->sps_buffers, 0, sizeof(h->sps_buffers));
         memset(h->pps_buffers, 0, sizeof(h->pps_buffers));
@@ -1644,8 +1644,6 @@ static int decode_update_thread_context(AVCodecContext *dst,
     copy_fields(h, h1, poc_lsb, redundant_pic_count);
 
     // reference lists
-    copy_fields(h, h1, ref_count, list_count);
-    copy_fields(h, h1, ref2frm, intra_gb);
     copy_fields(h, h1, short_ref, cabac_init_idc);
 
     copy_picture_range(h->short_ref, h1->short_ref, 32, h, h1);
@@ -1726,6 +1724,8 @@ int ff_h264_frame_start(H264Context *h)
     h->cur_pic.f.extended_data = h->cur_pic.f.data;
 
     ff_er_frame_start(&h->er);
+    h->er.last_pic =
+    h->er.next_pic = NULL;
 
     assert(h->linesize && h->uvlinesize);
 
@@ -2737,8 +2737,6 @@ static int field_end(H264Context *h, int in_setup)
      */
     if (!FIELD_PICTURE && h->current_slice && !h->sps.new) {
         h->er.cur_pic  = h->cur_pic_ptr;
-        h->er.last_pic = h->ref_count[0] ? &h->ref_list[0][0] : NULL;
-        h->er.next_pic = h->ref_count[1] ? &h->ref_list[1][0] : NULL;
         ff_er_frame_end(&h->er);
     }
     emms_c();
@@ -2852,7 +2850,7 @@ static int h264_set_parameter_from_sps(H264Context *h)
     return 0;
 }
 
-static enum PixelFormat get_pixel_format(H264Context *h)
+static enum PixelFormat get_pixel_format(H264Context *h, int force_callback)
 {
     switch (h->sps.bit_depth_luma) {
     case 9:
@@ -2921,7 +2919,7 @@ static enum PixelFormat get_pixel_format(H264Context *h)
                                         hwaccel_pixfmt_list_h264_420;
 
             for (i=0; fmt[i] != AV_PIX_FMT_NONE; i++)
-                if (fmt[i] == h->avctx->pix_fmt)
+                if (fmt[i] == h->avctx->pix_fmt && !force_callback)
                     return fmt[i];
             return h->avctx->get_format(h->avctx, fmt);
         }
@@ -3169,7 +3167,7 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
                      || h->avctx->bits_per_raw_sample != h->sps.bit_depth_luma
                      || h->cur_chroma_format_idc != h->sps.chroma_format_idc
                      || av_cmp_q(h->sps.sar, h->avctx->sample_aspect_ratio)));
-    if (h0->avctx->pix_fmt != get_pixel_format(h0))
+    if (h0->avctx->pix_fmt != get_pixel_format(h0, 0))
         must_reinit = 1;
 
     h->mb_width  = h->sps.mb_width;
@@ -3209,7 +3207,7 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
 
         flush_change(h);
 
-        if ((ret = get_pixel_format(h)) < 0)
+        if ((ret = get_pixel_format(h, 1)) < 0)
             return ret;
         h->avctx->pix_fmt = ret;
 
@@ -3229,7 +3227,7 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
             return -1;
         }
 
-        if ((ret = get_pixel_format(h)) < 0)
+        if ((ret = get_pixel_format(h, 1)) < 0)
             return ret;
         h->avctx->pix_fmt = ret;
 
@@ -3527,7 +3525,7 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
 
         if (h->ref_count[0]-1 > max[0] || h->ref_count[1]-1 > max[1]){
             av_log(h->avctx, AV_LOG_ERROR, "reference overflow %u > %u or %u > %u\n", h->ref_count[0]-1, max[0], h->ref_count[1]-1, max[1]);
-            h->ref_count[0] = h->ref_count[1] = 1;
+            h->ref_count[0] = h->ref_count[1] = 0;
             return AVERROR_INVALIDDATA;
         }
 
@@ -3535,8 +3533,10 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
             h->list_count = 2;
         else
             h->list_count = 1;
-    } else
-        h->ref_count[1]= h->ref_count[0]= h->list_count= 0;
+    } else {
+        h->list_count = 0;
+        h->ref_count[0] = h->ref_count[1] = 0;
+    }
 
     if (!default_ref_list_done)
         ff_h264_fill_default_ref_list(h);
@@ -3719,6 +3719,9 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
             ref2frm[i + 4] = 4 * id_list[(i - 16) >> 1] +
                              (h->ref_list[j][i].f.reference & 3);
     }
+
+    if (h->ref_count[0]) h->er.last_pic = &h->ref_list[0][0];
+    if (h->ref_count[1]) h->er.next_pic = &h->ref_list[1][0];
 
     if (h->avctx->debug & FF_DEBUG_PICT_INFO) {
         av_log(h->avctx, AV_LOG_DEBUG,

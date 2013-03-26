@@ -26,13 +26,15 @@
 #include "bytestream.h"
 #include "bmp.h"
 #include "internal.h"
+#include <stdio.h>
 
 static const uint32_t monoblack_pal[] = { 0x000000, 0xFFFFFF };
 static const uint32_t rgb565_masks[]  = { 0xF800, 0x07E0, 0x001F };
 static const uint32_t rgb444_masks[]  = { 0x0F00, 0x00F0, 0x000F };
 
 static av_cold int bmp_encode_init(AVCodecContext *avctx){
-    BMPContext *s = avctx->priv_data;
+    
+    BMPContext *s = avctx->priv_data;    
 
     avcodec_get_frame_defaults(&s->picture);
     avctx->coded_frame = &s->picture;
@@ -152,16 +154,19 @@ static int bmp_encode_frame(AVCodecContext *avctx, AVPacket *pkt,
             for(n = 0; n < avctx->width; n++)
                 AV_WL16(dst + n, src[n]);
         } else {
-            memcpy(buf, ptr, n_bytes_per_row);
+            memcpy(buf, ptr, n_bytes_per_row);            
+           // printf("\n\n****Buffer: %d****\n\n", (int)*buf);
         }
         buf += n_bytes_per_row;
         memset(buf, 0, pad_bytes_per_row);
+        //printf("\n\n****Buffer: %d****\n\n", (int)*buf);
         buf += pad_bytes_per_row;
         ptr -= p->linesize[0]; // ... and go back
     }
 
     pkt->flags |= AV_PKT_FLAG_KEY;
     *got_packet = 1;
+    
     return 0;
 }
 

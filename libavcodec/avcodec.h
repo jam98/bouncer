@@ -268,6 +268,7 @@ enum AVCodecID {
     AV_CODEC_ID_CLLC,
     AV_CODEC_ID_MSS2,
     AV_CODEC_ID_VP9,
+    AV_CODEC_ID_UTAH,
     AV_CODEC_ID_BRENDER_PIX= MKBETAG('B','P','I','X'),
     AV_CODEC_ID_Y41P       = MKBETAG('Y','4','1','P'),
     AV_CODEC_ID_ESCAPE130  = MKBETAG('E','1','3','0'),
@@ -491,7 +492,7 @@ enum AVCodecID {
     AV_CODEC_ID_MPEG4SYSTEMS = 0x20001, /**< _FAKE_ codec to indicate a MPEG-4 Systems
                                 * stream (only used by libavformat) */
     AV_CODEC_ID_FFMETADATA = 0x21000,   ///< Dummy codec for streams containing only metadata information.
-
+    
 #if FF_API_CODEC_ID
 #include "old_codec_ids.h"
 #endif
@@ -1501,7 +1502,7 @@ typedef struct AVFrame {
      * - encoding: unused
      * - decoding: Read by user.
      */
-    int64_t channels;
+    int channels;
 
     /**
      * size of the corresponding packet containing the compressed

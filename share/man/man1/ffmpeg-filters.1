@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "FFMPEG-FILTERS 1"
-.TH FFMPEG-FILTERS 1 "2013-02-20" " " " "
+.TH FFMPEG-FILTERS 1 "2013-03-08" " " " "
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -314,7 +314,7 @@ Follows a \s-1BNF\s0 description for the filtergraph syntax:
 \&        <LINKLABEL>        ::= "[" <NAME> "]"
 \&        <LINKLABELS>       ::= <LINKLABEL> [<LINKLABELS>]
 \&        <FILTER_ARGUMENTS> ::= sequence of chars (eventually quoted)
-\&        <FILTER>           ::= [<LINKNAMES>] <NAME> ["=" <ARGUMENTS>] [<LINKNAMES>]
+\&        <FILTER>           ::= [<LINKLABELS>] <NAME> ["=" <FILTER_ARGUMENTS>] [<LINKLABELS>]
 \&        <FILTERCHAIN>      ::= <FILTER> [,<FILTERCHAIN>]
 \&        <FILTERGRAPH>      ::= [sws_flags=<flags>;] <FILTERCHAIN> [;<FILTERGRAPH>]
 .Ve
@@ -1892,21 +1892,197 @@ threshold, and defaults to 98.
 .PP
 \&\fIthreshold\fR is the threshold below which a pixel value is
 considered black, and defaults to 32.
+.SS "blend"
+.IX Subsection "blend"
+Blend two video frames into each other.
+.PP
+It takes two input streams and outputs one stream, the first input is the
+\&\*(L"top\*(R" layer and second input is \*(L"bottom\*(R" layer.
+Output terminates when shortest input terminates.
+.PP
+This filter accepts a list of options in the form of \fIkey\fR=\fIvalue\fR
+pairs separated by \*(L":\*(R". A description of the accepted options follows.
+.IP "\fBc0_mode\fR" 4
+.IX Item "c0_mode"
+.PD 0
+.IP "\fBc1_mode\fR" 4
+.IX Item "c1_mode"
+.IP "\fBc2_mode\fR" 4
+.IX Item "c2_mode"
+.IP "\fBc3_mode\fR" 4
+.IX Item "c3_mode"
+.IP "\fBall_mode\fR" 4
+.IX Item "all_mode"
+.PD
+Set blend mode for specific pixel component or all pixel components in case
+of \fIall_mode\fR. Default value is \f(CW\*(C`normal\*(C'\fR.
+.Sp
+Available values for component modes are:
+.RS 4
+.IP "\fBaddition\fR" 4
+.IX Item "addition"
+.PD 0
+.IP "\fBand\fR" 4
+.IX Item "and"
+.IP "\fBaverage\fR" 4
+.IX Item "average"
+.IP "\fBburn\fR" 4
+.IX Item "burn"
+.IP "\fBdarken\fR" 4
+.IX Item "darken"
+.IP "\fBdifference\fR" 4
+.IX Item "difference"
+.IP "\fBdivide\fR" 4
+.IX Item "divide"
+.IP "\fBdodge\fR" 4
+.IX Item "dodge"
+.IP "\fBexclusion\fR" 4
+.IX Item "exclusion"
+.IP "\fBhardlight\fR" 4
+.IX Item "hardlight"
+.IP "\fBlighten\fR" 4
+.IX Item "lighten"
+.IP "\fBmultiply\fR" 4
+.IX Item "multiply"
+.IP "\fBnegation\fR" 4
+.IX Item "negation"
+.IP "\fBnormal\fR" 4
+.IX Item "normal"
+.IP "\fBor\fR" 4
+.IX Item "or"
+.IP "\fBoverlay\fR" 4
+.IX Item "overlay"
+.IP "\fBphoenix\fR" 4
+.IX Item "phoenix"
+.IP "\fBpinlight\fR" 4
+.IX Item "pinlight"
+.IP "\fBreflect\fR" 4
+.IX Item "reflect"
+.IP "\fBscreen\fR" 4
+.IX Item "screen"
+.IP "\fBsoftlight\fR" 4
+.IX Item "softlight"
+.IP "\fBsubtract\fR" 4
+.IX Item "subtract"
+.IP "\fBvividlight\fR" 4
+.IX Item "vividlight"
+.IP "\fBxor\fR" 4
+.IX Item "xor"
+.RE
+.RS 4
+.RE
+.IP "\fBc0_opacity\fR" 4
+.IX Item "c0_opacity"
+.IP "\fBc1_opacity\fR" 4
+.IX Item "c1_opacity"
+.IP "\fBc2_opacity\fR" 4
+.IX Item "c2_opacity"
+.IP "\fBc3_opacity\fR" 4
+.IX Item "c3_opacity"
+.IP "\fBall_opacity\fR" 4
+.IX Item "all_opacity"
+.PD
+Set blend opacity for specific pixel component or all pixel components in case
+of \fIall_expr\fR. Only used in combination with pixel component blend modes.
+.IP "\fBc0_expr\fR" 4
+.IX Item "c0_expr"
+.PD 0
+.IP "\fBc1_expr\fR" 4
+.IX Item "c1_expr"
+.IP "\fBc2_expr\fR" 4
+.IX Item "c2_expr"
+.IP "\fBc3_expr\fR" 4
+.IX Item "c3_expr"
+.IP "\fBall_expr\fR" 4
+.IX Item "all_expr"
+.PD
+Set blend expression for specific pixel component or all pixel components in case
+of \fIall_expr\fR. Note that related mode options will be ignored if those are set.
+.Sp
+The expressions can use the following variables:
+.RS 4
+.IP "\fBX\fR" 4
+.IX Item "X"
+.PD 0
+.IP "\fBY\fR" 4
+.IX Item "Y"
+.PD
+the coordinates of the current sample
+.IP "\fBW\fR" 4
+.IX Item "W"
+.PD 0
+.IP "\fBH\fR" 4
+.IX Item "H"
+.PD
+the width and height of currently filtered plane
+.IP "\fB\s-1SW\s0\fR" 4
+.IX Item "SW"
+.PD 0
+.IP "\fB\s-1SH\s0\fR" 4
+.IX Item "SH"
+.PD
+Width and height scale depending on the currently filtered plane. It is the
+ratio between the corresponding luma plane number of pixels and the current
+plane ones. E.g. for \s-1YUV4:2:0\s0 the values are \f(CW\*(C`1,1\*(C'\fR for the luma plane, and
+\&\f(CW\*(C`0.5,0.5\*(C'\fR for chroma planes.
+.IP "\fBT\fR" 4
+.IX Item "T"
+Time of the current frame, expressed in seconds.
+.IP "\fB\s-1TOP\s0, A\fR" 4
+.IX Item "TOP, A"
+Value of pixel component at current location for first video frame (top layer).
+.IP "\fB\s-1BOTTOM\s0, B\fR" 4
+.IX Item "BOTTOM, B"
+Value of pixel component at current location for second video frame (bottom layer).
+.RE
+.RS 4
+.RE
+.PP
+Some examples follow.
+.IP "\(bu" 4
+Apply transition from bottom layer to top layer in first 10 seconds:
+.Sp
+.Vb 1
+\&        blend=all_expr=\*(AqA*(if(gte(T,10),1,T/10))+B*(1\-(if(gte(T,10),1,T/10)))\*(Aq
+.Ve
+.IP "\(bu" 4
+Apply 1x1 checkerboard effect:
+.Sp
+.Vb 1
+\&        blend=all_expr=\*(Aqif(eq(mod(X,2),mod(Y,2)),A,B)\*(Aq
+.Ve
 .SS "boxblur"
 .IX Subsection "boxblur"
 Apply boxblur algorithm to the input video.
 .PP
-This filter accepts the parameters:
-\&\fIluma_radius\fR:\fIluma_power\fR:\fIchroma_radius\fR:\fIchroma_power\fR:\fIalpha_radius\fR:\fIalpha_power\fR
+The filter accepts parameters as a list of \fIkey\fR=\fIvalue\fR
+pairs, separated by \*(L":\*(R". If the key of the first options is omitted,
+the arguments are interpreted according to the syntax
+\&\fBluma_radius\fR:\fBluma_power\fR:\fBchroma_radius\fR:\fBchroma_power\fR:\fBalpha_radius\fR:\fBalpha_power\fR.
 .PP
-Chroma and alpha parameters are optional, if not specified they default
-to the corresponding values set for \fIluma_radius\fR and
-\&\fIluma_power\fR.
-.PP
-\&\fIluma_radius\fR, \fIchroma_radius\fR, and \fIalpha_radius\fR represent
-the radius in pixels of the box used for blurring the corresponding
-input plane. They are expressions, and can contain the following
-constants:
+A description of the accepted options follows.
+.IP "\fBluma_radius, lr\fR" 4
+.IX Item "luma_radius, lr"
+.PD 0
+.IP "\fBchroma_radius, cr\fR" 4
+.IX Item "chroma_radius, cr"
+.IP "\fBalpha_radius, ar\fR" 4
+.IX Item "alpha_radius, ar"
+.PD
+Set an expression for the box radius in pixels used for blurring the
+corresponding input plane.
+.Sp
+The radius value must be a non-negative number, and must not be
+greater than the value of the expression \f(CW\*(C`min(w,h)/2\*(C'\fR for the
+luma and alpha planes, and of \f(CW\*(C`min(cw,ch)/2\*(C'\fR for the chroma
+planes.
+.Sp
+Default value for \fBluma_radius\fR is \*(L"2\*(R". If not specified,
+\&\fBchroma_radius\fR and \fBalpha_radius\fR default to the
+corresponding value set for \fBluma_radius\fR.
+.Sp
+The expressions can contain the following constants:
+.RS 4
 .IP "\fBw, h\fR" 4
 .IX Item "w, h"
 the input width and height in pixels
@@ -1917,16 +2093,27 @@ the input chroma image width and height in pixels
 .IX Item "hsub, vsub"
 horizontal and vertical chroma subsample values. For example for the
 pixel format \*(L"yuv422p\*(R" \fIhsub\fR is 2 and \fIvsub\fR is 1.
+.RE
+.RS 4
+.RE
+.IP "\fBluma_power, lp\fR" 4
+.IX Item "luma_power, lp"
+.PD 0
+.IP "\fBchroma_power, cp\fR" 4
+.IX Item "chroma_power, cp"
+.IP "\fBalpha_power, ap\fR" 4
+.IX Item "alpha_power, ap"
+.PD
+Specify how many times the boxblur filter is applied to the
+corresponding plane.
+.Sp
+Default value for \fBluma_power\fR is 2. If not specified,
+\&\fBchroma_power\fR and \fBalpha_power\fR default to the
+corresponding value set for \fBluma_power\fR.
+.Sp
+A value of 0 will disable the effect.
 .PP
-The radius must be a non-negative number, and must not be greater than
-the value of the expression \f(CW\*(C`min(w,h)/2\*(C'\fR for the luma and alpha planes,
-and of \f(CW\*(C`min(cw,ch)/2\*(C'\fR for the chroma planes.
-.PP
-\&\fIluma_power\fR, \fIchroma_power\fR, and \fIalpha_power\fR represent
-how many times the boxblur filter is applied to the corresponding
-plane.
-.PP
-Some examples follow:
+Some examples follow.
 .IP "\(bu" 4
 Apply a boxblur filter with luma, chroma, and alpha radius
 set to 2:
@@ -1935,13 +2122,13 @@ set to 2:
 \&        boxblur=2:1
 .Ve
 .IP "\(bu" 4
-Set luma radius to 2, alpha and chroma radius to 0
+Set luma radius to 2, alpha and chroma radius to 0:
 .Sp
 .Vb 1
-\&        boxblur=2:1:0:0:0:0
+\&        boxblur=2:1:cr=0:ar=0
 .Ve
 .IP "\(bu" 4
-Set luma and chroma radius to a fraction of the video dimension
+Set luma and chroma radius to a fraction of the video dimension:
 .Sp
 .Vb 1
 \&        boxblur=min(h\e,w)/10:1:min(cw\e,ch)/10:1
@@ -3012,7 +3199,7 @@ For more information see:
 <\fBhttp://frei0r.dyne.org\fR>
 .SS "geq"
 .IX Subsection "geq"
-The filter takes one, two or three equations as parameter, separated by ':'.
+The filter takes one, two, three or four equations as parameter, separated by ':'.
 The first equation is mandatory and applies to the luma plane. The two
 following are respectively for chroma blue and chroma red planes.
 .PP
@@ -3026,10 +3213,14 @@ the chrominance blue expression
 .IP "\fBcr_expr\fR" 4
 .IX Item "cr_expr"
 the chrominance red expression
+.IP "\fBalpha_expr\fR" 4
+.IX Item "alpha_expr"
+the alpha expression
 .PP
 If one of the chrominance expression is not defined, it falls back on the other
-one. If none of them are specified, they will evaluate the luminance
-expression.
+one. If no alpha expression is specified it will evaluate to opaque value.
+If none of chrominance expressions are
+specified, they will evaluate the luminance expression.
 .PP
 The expressions can use the following variables and functions:
 .IP "\fBN\fR" 4
@@ -3061,11 +3252,15 @@ plane.
 .IP "\fBcb(x, y)\fR" 4
 .IX Item "cb(x, y)"
 Return the value of the pixel at location (\fIx\fR,\fIy\fR) of the
-blue-difference chroma plane.
+blue-difference chroma plane. Returns 0 if there is no such plane.
 .IP "\fBcr(x, y)\fR" 4
 .IX Item "cr(x, y)"
 Return the value of the pixel at location (\fIx\fR,\fIy\fR) of the
-red-difference chroma plane.
+red-difference chroma plane. Returns 0 if there is no such plane.
+.IP "\fBalpha(x, y)\fR" 4
+.IX Item "alpha(x, y)"
+Return the value of the pixel at location (\fIx\fR,\fIy\fR) of the alpha
+plane. Returns 0 if there is no such plane.
 .PP
 For functions, if \fIx\fR and \fIy\fR are outside the area, the value will be
 automatically clipped to the closer edge.

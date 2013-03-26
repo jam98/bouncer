@@ -144,7 +144,8 @@ static void init_options(OptionsContext *o, int is_input)
                 "-t is not an input option, keeping it for the next output;"
                 " consider fixing your command line.\n");
     } else
-    o->recording_time = INT64_MAX;
+        o->recording_time = INT64_MAX;
+    o->stop_time = INT64_MAX;
     o->mux_max_delay  = 0.7;
     o->limit_filesize = UINT64_MAX;
     o->chapters_input_file = INT_MAX;
@@ -956,6 +957,8 @@ static OutputStream *new_output_stream(OptionsContext *o, AVFormatContext *oc, e
                    preset, ost->file_index, ost->index);
             exit(1);
         }
+    } else {
+        ost->opts = filter_codec_opts(o->g->codec_opts, AV_CODEC_ID_NONE, oc, st, NULL);
     }
 
     avcodec_get_context_defaults3(st->codec, ost->enc);
@@ -1002,11 +1005,12 @@ static OutputStream *new_output_stream(OptionsContext *o, AVFormatContext *oc, e
         st->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
 
     av_opt_get_int(o->g->sws_opts, "sws_flags", 0, &ost->sws_flags);
-    av_opt_get_int   (o->g->swr_opts, "filter_type"  , 0, &ost->swr_filter_type);
-    av_opt_get_int   (o->g->swr_opts, "dither_method", 0, &ost->swr_dither_method);
-    av_opt_get_double(o->g->swr_opts, "dither_scale" , 0, &ost->swr_dither_scale);
+
+    av_dict_copy(&ost->swr_opts, o->g->swr_opts, 0);
     if (ost->enc && av_get_exact_bits_per_sample(ost->enc->id) == 24)
-        ost->swr_dither_scale = ost->swr_dither_scale*256;
+        av_dict_set(&ost->swr_opts, "output_sample_bits", "24", 0);
+
+    av_dict_copy(&ost->resample_opts, o->g->resample_opts, 0);
 
     ost->source_index = source_index;
     if (source_index >= 0) {
@@ -1653,6 +1657,20 @@ loop_end:
             && (!e->key[5] || check_stream_specifier(oc, ost->st, e->key+6)))
             if (av_opt_set(ost->st->codec, "flags", e->value, 0) < 0)
                 exit(1);
+    }
+
+    if (o->stop_time != INT64_MAX && o->recording_time != INT64_MAX) {
+        o->stop_time = INT64_MAX;
+        av_log(NULL, AV_LOG_WARNING, "-t and -to cannot be used together; using -t.\n");
+    }
+
+    if (o->stop_time != INT64_MAX && o->recording_time == INT64_MAX) {
+        if (o->stop_time <= o->start_time) {
+            av_log(NULL, AV_LOG_WARNING, "-to value smaller than -ss; ignoring -to.\n");
+            o->stop_time = INT64_MAX;
+        } else {
+            o->recording_time = o->stop_time - o->start_time;
+        }
     }
 
     GROW_ARRAY(output_files, nb_output_files);
@@ -2388,6 +2406,8 @@ const OptionDef options[] = {
     { "t",              HAS_ARG | OPT_TIME | OPT_OFFSET,             { .off = OFFSET(recording_time) },
         "record or transcode \"duration\" seconds of audio/video",
         "duration" },
+    { "to",             HAS_ARG | OPT_TIME | OPT_OFFSET,             { .off = OFFSET(stop_time) },
+        "record or transcode stop time", "time_stop" },
     { "fs",             HAS_ARG | OPT_INT64 | OPT_OFFSET,            { .off = OFFSET(limit_filesize) },
         "set the limit file size in bytes", "limit_size" },
     { "ss",             HAS_ARG | OPT_TIME | OPT_OFFSET,             { .off = OFFSET(start_time) },

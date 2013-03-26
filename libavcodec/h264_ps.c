@@ -27,7 +27,6 @@
 
 #include "libavutil/imgutils.h"
 #include "internal.h"
-#include "dsputil.h"
 #include "avcodec.h"
 #include "h264.h"
 #include "h264data.h" //FIXME FIXME FIXME (just for zigzag_scan)
@@ -380,7 +379,7 @@ int ff_h264_decode_seq_parameter_set(H264Context *h){
         }
         sps->bit_depth_luma   = get_ue_golomb(&h->gb) + 8;
         sps->bit_depth_chroma = get_ue_golomb(&h->gb) + 8;
-        if (sps->bit_depth_luma > 14U || sps->bit_depth_chroma > 14U) {
+        if (sps->bit_depth_luma > 14U || sps->bit_depth_chroma > 14U || sps->bit_depth_luma != sps->bit_depth_chroma) {
             av_log(h->avctx, AV_LOG_ERROR, "illegal bit depth value (%d, %d)\n",
                    sps->bit_depth_luma, sps->bit_depth_chroma);
             goto fail;

@@ -32,7 +32,6 @@
 
 #include "libavutil/float_dsp.h"
 #include "avcodec.h"
-#include "dsputil.h"
 #include "fft.h"
 #include "mpeg4audio.h"
 #include "sbr.h"
@@ -256,8 +255,6 @@ typedef struct ChannelElement {
     ChannelCoupling coup;
     SpectralBandReplication sbr;
 } ChannelElement;
-
-typedef struct AACContext AACContext;
 
 /**
  * main AAC context

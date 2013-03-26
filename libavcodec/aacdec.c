@@ -84,7 +84,6 @@
 #include "avcodec.h"
 #include "internal.h"
 #include "get_bits.h"
-#include "dsputil.h"
 #include "fft.h"
 #include "fmtconvert.h"
 #include "lpc.h"
@@ -114,6 +113,10 @@
 
 static VLC vlc_scalefactors;
 static VLC vlc_spectral[11];
+
+static int output_configure(AACContext *ac,
+                            uint8_t layout_map[MAX_ELEM_ID*4][3], int tags,
+                            enum OCStatus oc_type, int get_new_frame);
 
 #define overread_err "Input buffer exhausted before END element found\n"
 
@@ -408,6 +411,8 @@ static void pop_output_configuration(AACContext *ac) {
         ac->oc[1] = ac->oc[0];
         ac->avctx->channels = ac->oc[1].channels;
         ac->avctx->channel_layout = ac->oc[1].channel_layout;
+        output_configure(ac, ac->oc[1].layout_map, ac->oc[1].layout_map_tags,
+                         ac->oc[1].status, 0);
     }
 }
 
@@ -2554,7 +2559,6 @@ static int aac_decode_frame_int(AVCodecContext *avctx, void *data,
             if (pce_found) {
                 av_log(avctx, AV_LOG_ERROR,
                        "Not evaluating a further program_config_element as this construct is dubious at best.\n");
-                pop_output_configuration(ac);
             } else {
                 err = output_configure(ac, layout_map, tags, OC_TRIAL_PCE, 1);
                 if (!err)
@@ -2622,7 +2626,7 @@ static int aac_decode_frame_int(AVCodecContext *avctx, void *data,
 
     if (multiplier) {
         int side_size;
-        uint32_t *side = av_packet_get_side_data(avpkt, AV_PKT_DATA_SKIP_SAMPLES, &side_size);
+        const uint8_t *side = av_packet_get_side_data(avpkt, AV_PKT_DATA_SKIP_SAMPLES, &side_size);
         if (side && side_size>=4)
             AV_WL32(side, 2*AV_RL32(side));
     }
