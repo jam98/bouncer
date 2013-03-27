@@ -1,0 +1,8 @@
+* code with new PAVGB for MMX only CPU splited into separate file
+  and being compiled in the same way as _avg.h
+* PAVG_MMX macros accept also output parameter
+* implemented faster put_pixels_xy2, but it has slightly smaller precission.
+  But there is not visible difference in the image quality - might be eventualy
+  easily switched back (#if 0 #endif)- please check
+
+Originally committed as revision 624 to svn://svn.ffmpeg.org/ffmpeg/trunk
