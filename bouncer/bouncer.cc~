@@ -1,0 +1,90 @@
+// g++ -I ../include/ -L../lib test.cc `pkg-config --cflags --libs libavutil libavformat libavcodec`
+
+
+#include <iostream>
+
+#ifndef INT64_C
+#define INT64_C(c) (c ## LL)
+#define UINT64_C(c) (c ## ULL)
+#endif
+
+extern "C"
+{
+
+#include "libavutil/mathematics.h"
+
+#include "libavcodec/avcodec.h"
+#include "libavformat/avformat.h"
+
+}
+
+using namespace std;
+
+int main(int argc, char *argv[])
+{
+    // Registers all available file formats and codecs with the library so
+    // they will be used automatically when a file with the corresponding
+    // format/codec is opened
+    av_register_all();
+    
+    // This will store information about the file we will open.
+    AVFormatContext *frmt_context;
+
+    // Open the background image file
+    if (avformat_open_input(&frmt_context, argv[1], NULL, NULL) != 0)
+        return -1; // Couldn't open file
+    
+    // Retrieve stream information
+    if (av_find_stream_info(frmt_context) < 0)
+        return -1; // Couldn't find stream information
+    
+    // Dump information about file onto standard error
+    dump_format(frmt_context, 0, argv[1], 0);
+    
+    // 
+    AVCodecContext *pCodecCtx;
+
+    // Find the first video stream
+    videoStream = -1;
+    
+    for (int i = 0; i < frmt_context->nb_streams; i++)
+    {
+        if (frmt_context->streams[i]->codec->codec_type == CODEC_TYPE_VIDEO)
+        {
+            videoStream = i;
+            break;
+        }
+    }
+    if (videoStream == -1)
+        return -1; // Didn't find a video stream
+
+    // Get a pointer to the codec context for the video stream
+    pCodecCtx = frmt_context->streams[videoStream]->codec;
+    
+    AVCodec *pCodec;
+
+    // Find the decoder for the video stream
+    pCodec=avcodec_find_decoder(pCodecCtx->codec_id);
+    if(pCodec==NULL)
+    {
+        fprintf(stderr, "Unsupported codec!\n");
+        return -1; // Codec not found
+    }
+    
+    // Open codec
+    if(avcodec_open(pCodecCtx, pCodec)<0)
+        return -1; // Could not open codec
+    
+    
+    
+
+  int64_t result;
+
+  result = av_gcd(39, 91);
+  
+  cout << "Hello: " << result << endl;
+  
+  
+  
+  return 0;
+}
